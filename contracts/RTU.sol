@@ -113,8 +113,8 @@ contract RTU is usingOraclize {
 
 
     /// @param _beneficiary is the address which will be receiving the vesting tokens
-    constructor(address _beneficiary) public {
-        token = ERC20Basic(0xea5f88E54d982Cbb0c441cde4E79bC305e5b43Bc);
+    constructor(address _token, address _beneficiary) public payable {
+        token = ERC20Basic(_token);
         beneficiary = _beneficiary;
         owner = msg.sender;
         currentStatus = Status.OPEN;
@@ -159,7 +159,7 @@ contract RTU is usingOraclize {
     }
   
     function init() internal{
-        oraclize_query(2592000, "URL", "");
+        oraclize_query(60, "URL", "");
     }
     
     event Released(address beneficiary, uint amount);
@@ -176,7 +176,7 @@ contract RTU is usingOraclize {
             require(amount > 0);
                 
                 // calculate 5% of existing amount
-            token_amount = (amount.mul(5)).div(100);
+            token_amount = (amount.mul(10)).div(100);
         }
         
         token.safeTransfer(beneficiary, token_amount);
@@ -185,7 +185,7 @@ contract RTU is usingOraclize {
                 
         // enable scheduler for the next month
         if(token.balanceOf(address(this)) >= token_amount){
-            oraclize_query(2592000, "URL", "");
+            oraclize_query(60, "URL", "");
         }
 
     }
