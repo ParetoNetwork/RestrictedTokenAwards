@@ -103,6 +103,12 @@ contract RTU is usingOraclize {
     address public owner;
     
     uint public token_amount = 0;
+
+    bool[] public months;
+
+    uint public total_months = 0;
+    
+    uint public current_month = 0;
   
     enum Status {
         OPEN,
@@ -113,15 +119,17 @@ contract RTU is usingOraclize {
 
 
     /// @param _beneficiary is the address which will be receiving the vesting tokens
-    constructor(address _beneficiary) public {
+    constructor(address _beneficiary, uint _noOfMonths) public payable{
         token = ERC20Basic(0xea5f88E54d982Cbb0c441cde4E79bC305e5b43Bc);
         beneficiary = _beneficiary;
         owner = msg.sender;
         currentStatus = Status.OPEN;
+        total_months = _noOfMonths;
+        months.length = _noOfMonths;
         init();
     }
     
-    modifier onlyOnwer(){
+    modifier onlyOwner(){
         require(msg.sender == owner);
         _;
     }
@@ -129,7 +137,7 @@ contract RTU is usingOraclize {
     event OwnerChanged(address newOwner);
   
     /// @param _newOwner is the address which will be set as the new owner of this RTU contract
-    function changeOwner(address _newOwner) public onlyOnwer{
+    function changeOwner(address _newOwner) public onlyOwner{
         require(_newOwner != 0x0);
         owner = _newOwner;
         
@@ -139,7 +147,7 @@ contract RTU is usingOraclize {
     event BeneficiaryChanged(address newBeneficiary);
     
     /// @param _beneficiary is the address which will be set as the new beneficiary of this RTU contract
-    function changeBeneficiary(address _beneficiary) public onlyOnwer{
+    function changeBeneficiary(address _beneficiary) public onlyOwner{
         require(_beneficiary != 0x0);
         beneficiary = _beneficiary;
         
@@ -149,7 +157,7 @@ contract RTU is usingOraclize {
     event CancelledAndWithdrawn(address owner, uint balance);
     
         /// @notice this funnction cancel the RTU and withdraw all the non vested tokens to the owner
-    function cancelAndWithdraw() public onlyOnwer{
+    function cancelAndWithdraw() public onlyOwner{
         currentStatus = Status.CANCELLED;
         
         uint balance = token.balanceOf(address(this));
@@ -159,35 +167,62 @@ contract RTU is usingOraclize {
     }
   
     function init() internal{
-        oraclize_query(2592000, "URL", "");
+        oraclize_query(60, "URL", "");
     }
     
-    event Released(address beneficiary, uint amount);
+    event Released(address beneficiary, uint amount, uint month);
   
     /// @notice this function called by the oraclize contract
     function __callback(bytes32 myid, string result) public {
         if (msg.sender != oraclize_cbAddress()) revert();
 
         require(currentStatus == Status.OPEN);
+
+        if(months[current_month] != true){
                 
-        if(token_amount == 0){
-                
-            uint256 amount = token.balanceOf(address(this));
-            require(amount > 0);
-                
-                // calculate 5% of existing amount
-            token_amount = (amount.mul(5)).div(100);
-        }
+            if(token_amount == 0){
+                    
+                uint256 amount = token.balanceOf(address(this));
+                require(amount > 0);
+                    
+                token_amount = amount.div(total_months);
+
+            }
+            
+            token.safeTransfer(beneficiary, token_amount);
+
+            months[current_month] = true;
+
+            emit Released(beneficiary, token_amount, current_month+1);
+        } 
         
-        token.safeTransfer(beneficiary, token_amount);
-        
-        emit Released(beneficiary, token_amount);
-                
+        current_month = current_month.add(1);
+       
         // enable scheduler for the next month
         if(token.balanceOf(address(this)) >= token_amount){
-            oraclize_query(2592000, "URL", "");
+            oraclize_query(60, "URL", "");
         }
 
+    }
+
+    function makeManualPayment(uint _month) public onlyOwner{
+        require(currentStatus == Status.OPEN);
+                
+        if(token_amount == 0){
+                    
+            uint256 amount = token.balanceOf(address(this));
+            require(amount > 0);
+                    
+            token_amount = amount.div(total_months);
+
+        }
+            
+        token.safeTransfer(beneficiary, token_amount);
+
+        months[_month - 1] = true;
+
+        emit Released(beneficiary, token_amount, _month);
+                
     }
     
     //fallback
