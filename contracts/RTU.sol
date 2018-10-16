@@ -103,6 +103,8 @@ contract RTU is usingOraclize {
     address public owner;
     
     uint public token_amount = 0;
+    
+    uint public total_months;
   
     enum Status {
         OPEN,
@@ -113,11 +115,12 @@ contract RTU is usingOraclize {
 
 
     /// @param _beneficiary is the address which will be receiving the vesting tokens
-    constructor(address _token, address _beneficiary) public payable {
+    constructor(address _token, address _beneficiary, uint _noOfMonths) public payable{
         token = ERC20Basic(_token);
         beneficiary = _beneficiary;
         owner = msg.sender;
         currentStatus = Status.OPEN;
+        total_months = _noOfMonths;
         init();
     }
     
@@ -176,7 +179,10 @@ contract RTU is usingOraclize {
             require(amount > 0);
                 
                 // calculate 5% of existing amount
-            token_amount = (amount.mul(10)).div(100);
+            // token_amount = (amount.mul(10)).div(100);
+            // uint remainder = amount % total_months;
+            token_amount = amount.div(total_months);
+
         }
         
         token.safeTransfer(beneficiary, token_amount);

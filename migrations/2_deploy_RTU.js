@@ -5,7 +5,7 @@ const beneficiary = "0xB06cEF6B14dd249f5a0977F645436cC4f4095325"; // need to set
 
 module.exports = function(deployer, network, accounts) {
   deployer.deploy(token, { from: accounts[0] }).then(() => {
-    return deployer.deploy(RTU, token.address, beneficiary, {
+    return deployer.deploy(RTU, token.address, beneficiary, 3, {
       from: accounts[0],
       value:web3.toWei('0.1','ether')
     }).then(async () => {
