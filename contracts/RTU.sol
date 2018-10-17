@@ -208,6 +208,8 @@ contract RTU is usingOraclize {
     function makeManualPayment(uint _month) public onlyOwner{
         require(currentStatus == Status.OPEN);
                 
+        require(months[_month - 1] == false);
+        
         if(token_amount == 0){
                     
             uint256 amount = token.balanceOf(address(this));
