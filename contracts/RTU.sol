@@ -119,8 +119,8 @@ contract RTU is usingOraclize {
 
 
     /// @param _beneficiary is the address which will be receiving the vesting tokens
-    constructor(address _beneficiary, uint _noOfMonths) public payable{
-        token = ERC20Basic(0xea5f88E54d982Cbb0c441cde4E79bC305e5b43Bc);
+    constructor(address _token, address _beneficiary, uint _noOfMonths) public payable{
+        token = ERC20Basic(_token);
         beneficiary = _beneficiary;
         owner = msg.sender;
         currentStatus = Status.OPEN;
@@ -208,6 +208,8 @@ contract RTU is usingOraclize {
     function makeManualPayment(uint _month) public onlyOwner{
         require(currentStatus == Status.OPEN);
                 
+        require(months[_month - 1] == false);
+        
         if(token_amount == 0){
                     
             uint256 amount = token.balanceOf(address(this));

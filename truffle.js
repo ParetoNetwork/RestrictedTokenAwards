@@ -19,6 +19,18 @@ module.exports = {
       network_id: 4,
       gas: 4712388
     },
+    ropsten: {
+      provider: function() {
+        return new HDWalletProvider(
+          mnemonic,
+          "https://ropsten.infura.io/QWMgExFuGzhpu2jUr6Pq",
+          0,
+          9
+        );
+      },
+      network_id: 3,
+      gas: 4712388
+    },
     mainnet: {
       provider: function() {
         return new HDWalletProvider(
