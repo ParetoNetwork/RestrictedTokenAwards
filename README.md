@@ -1,5 +1,9 @@
-# RestrictedTokenUnits
-RTUs made to mimmick RSUs, for giving vesting agreements to partners
+# RestrictedTokenAwards
+RTAs made to mimmick RSAs, for giving vesting agreements to partners
+
+Restricted Token Awards are like Restricted Stock Awards. 
+
+For use with employees this does not allow for arbitrary tax withholding from distributions.
 
 #Steps
 
