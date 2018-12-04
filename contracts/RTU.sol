@@ -120,7 +120,10 @@ contract RTU is usingOraclize {
 
     /// @param _beneficiary is the address which will be receiving the vesting tokens
     constructor(address _beneficiary, uint _noOfMonths) public payable{
-        token = ERC20Basic(0xea5f88E54d982Cbb0c441cde4E79bC305e5b43Bc);
+        
+        uint cost = (40455 *  _noOfMonths)/10000000;     // calculate the Ether cost for all the months
+        require(msg.value > cost * 1 ether);
+        token = ERC20Basic(address(0xea5f88e54d982cbb0c441cde4e79bc305e5b43bc));
         beneficiary = _beneficiary;
         owner = msg.sender;
         currentStatus = Status.OPEN;
@@ -162,12 +165,13 @@ contract RTU is usingOraclize {
         
         uint balance = token.balanceOf(address(this));
         token.safeTransfer(owner, balance);
+        owner.transfer(address(this).balance);
         
         emit CancelledAndWithdrawn(owner, balance);
     }
   
     function init() internal{
-        oraclize_query(60, "URL", "");
+        oraclize_query(2628000, "URL", "");   // make the scheuler set for one month
     }
     
     event Released(address beneficiary, uint amount, uint month);
@@ -178,20 +182,20 @@ contract RTU is usingOraclize {
 
         require(currentStatus == Status.OPEN);
 
-        if(months[current_month] != true){
+        if(months[current_month] != true){     // current month's payment is not paid => true
                 
-            if(token_amount == 0){
+            if(token_amount == 0){    // if it is the first time calcuting amount
                     
                 uint256 amount = token.balanceOf(address(this));
                 require(amount > 0);
                     
-                token_amount = amount.div(total_months);
+                token_amount = amount.div(total_months);    // calculate amount for a single month
 
             }
             
             token.safeTransfer(beneficiary, token_amount);
 
-            months[current_month] = true;
+            months[current_month] = true;   // payout is made for the current month
 
             emit Released(beneficiary, token_amount, current_month+1);
         } 
@@ -200,7 +204,9 @@ contract RTU is usingOraclize {
        
         // enable scheduler for the next month
         if(token.balanceOf(address(this)) >= token_amount){
-            oraclize_query(60, "URL", "");
+            oraclize_query(2628000, "URL", "");    // set the oraclize scheduler for the next month's payment
+        } else {
+            owner.transfer(address(this).balance);   // send the left over Ethers back to owner
         }
 
     }
@@ -212,10 +218,10 @@ contract RTU is usingOraclize {
         
         if(token_amount == 0){
                     
-            uint256 amount = token.balanceOf(address(this));
+            uint256 amount = token.balanceOf(address(this)); 
             require(amount > 0);
                     
-            token_amount = amount.div(total_months);
+            token_amount = amount.div(total_months);  // calculate single month's payment
 
         }
             
